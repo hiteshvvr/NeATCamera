@@ -71,6 +71,8 @@ class ControlWindow(QtGui.QWidget):
         self.quit_button.clicked.connect(self.endCapture)
         self.end_button = QtGui.QPushButton('Stop')
 
+        self.getroi_button = QtGui.QPushButton('Get ROI')
+        self.getroi_button.clicked.connect(self.getROI)
         # ------ Modification ------ #
         self.capture_button = QtGui.QPushButton('Capture')
         self.capture_button.clicked.connect(self.saveCapture)
@@ -80,6 +82,7 @@ class ControlWindow(QtGui.QWidget):
         vbox.addWidget(self.start_button)
         vbox.addWidget(self.end_button)
         vbox.addWidget(self.quit_button)
+        vbox.addWidget(self.getroi_button)
 
         # ------ Modification ------ #
         vbox.addWidget(self.capture_button)
@@ -99,6 +102,21 @@ class ControlWindow(QtGui.QWidget):
             self.capture.setWindowFlags(QtCore.Qt.Tool)
         self.capture.start()
         self.capture.show()
+
+
+    def getROI(self):
+        self.rx1 = 0 
+        self.rx2 = 0 
+        self.ry1 = 0 
+        self.ry2 = 0 
+        if not self.capture:
+            self.capture = QtCapture(0)
+
+        self.retval, self.timage = self.capture.cap.read()
+        self.r = cv2.selectROI("Image", im, fromCenter, showCrosshair)
+
+
+
 
     def endCapture(self):
         self.capture.deleteLater()
