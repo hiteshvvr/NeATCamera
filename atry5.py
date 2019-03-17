@@ -1,16 +1,17 @@
 import sys
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtWidgets
 import cv2
 
-class QtCapture(QtGui.QWidget):
+class QtCapture(QtWidgets.QWidget):
     def __init__(self, *args):
-        super(QtGui.QWidget, self).__init__()
+        super(QtWidgets.QWidget, self).__init__()
 
         self.fps = 24
         self.cap = cv2.VideoCapture(*args)
 
-        self.video_frame = QtGui.QLabel()
-        lay = QtGui.QVBoxLayout()
+        self.video_frame = QtWidgets.QLabel()
+        lay = QtWidgets.QVBoxLayout()
         lay.setMargin(0)
         lay.addWidget(self.video_frame)
         self.setLayout(lay)
@@ -35,8 +36,8 @@ class QtCapture(QtGui.QWidget):
 
         # My webcam yields frames in BGR format
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        img = QtGui.QImage(frame, frame.shape[1], frame.shape[0], QtGui.QImage.Format_RGB888)
-        pix = QtGui.QPixmap.fromImage(img)
+        img = QtWidgets.QImage(frame, frame.shape[1], frame.shape[0], QtWidgets.QImage.Format_RGB888)
+        pix = QtWidgets.QPixmap.fromImage(img)
         self.video_frame.setPixmap(pix)
 
     def start(self):
@@ -57,26 +58,26 @@ class QtCapture(QtGui.QWidget):
 
     def deleteLater(self):
         self.cap.release()
-        super(QtGui.QWidget, self).deleteLater()
+        super(QtWidgets.QWidget, self).deleteLater()
 
 
-class ControlWindow(QtGui.QWidget):
+class ControlWindow(QtWidgets.QWidget):
     def __init__(self):
-        QtGui.QWidget.__init__(self)
+        QtWidgets.QWidget.__init__(self)
         self.capture = None
 
-        self.start_button = QtGui.QPushButton('Start')
+        self.start_button = QtWidgets.QPushButton('Start')
         self.start_button.clicked.connect(self.startCapture)
-        self.quit_button = QtGui.QPushButton('End')
+        self.quit_button = QtWidgets.QPushButton('End')
         self.quit_button.clicked.connect(self.endCapture)
-        self.end_button = QtGui.QPushButton('Stop')
+        self.end_button = QtWidgets.QPushButton('Stop')
 
         # ------ Modification ------ #
-        self.capture_button = QtGui.QPushButton('Capture')
+        self.capture_button = QtWidgets.QPushButton('Capture')
         self.capture_button.clicked.connect(self.saveCapture)
         # ------ Modification ------ #
 
-        vbox = QtGui.QVBoxLayout(self)
+        vbox = QtWidgets.QVBoxLayout(self)
         vbox.addWidget(self.start_button)
         vbox.addWidget(self.end_button)
         vbox.addWidget(self.quit_button)
@@ -115,6 +116,6 @@ class ControlWindow(QtGui.QWidget):
 if __name__ == '__main__':
 
     import sys
-    app = QtGui.QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
     window = ControlWindow()
     sys.exit(app.exec_())
