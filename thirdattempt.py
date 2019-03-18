@@ -68,6 +68,7 @@ def plotcontinues():
     while True:
         time.sleep(0.1)
         update()
+    sys.exit(app.exec_())
 
 
 
@@ -89,6 +90,6 @@ c.pack()
 a.pack()
 top.mainloop()
 
-sys.exit(app.exec_())
-cv2.destroyAllWindows()
+
+# cv2.destroyAllWindows()
 

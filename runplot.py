@@ -17,7 +17,7 @@ win.setWindowTitle('pyqtgraph example: PanningPlot')
 
 plt = win.addPlot()
 #plt.setAutoVisibleOnly(y=True)
-pen1 = pg.mkPen('g', width=2, style=QtCore.Qt.DashLine)          ## Make a dashed yellow line 2px wide
+pen1 = pg.mkPen('r', width=2, style=QtCore.Qt.DashLine)          ## Make a dashed yellow line 2px wide
 pen2 = pg.mkPen(color=(000, 000, 255), style=QtCore.Qt.DotLine)  ## Dotted pale-blue line
 curve = plt.plot(pen=pen1)
 

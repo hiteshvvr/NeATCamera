@@ -16,6 +16,7 @@ if __name__ == '__main__' :
     showCrosshair = False
     fromCenter = False
     r = cv2.selectROI("Image", im, fromCenter, showCrosshair)
+    print(r)
 
     # Crop image
     imCrop = im[int(r[1]):int(r[1]+r[3]), int(r[0]):int(r[0]+r[2])]
