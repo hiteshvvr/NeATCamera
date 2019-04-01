@@ -1,7 +1,7 @@
 import numpy as np
 
 from PyQt5.QtCore import Qt, QThread, QTimer
-from PyQt5.QtWidgets import QMainWindow, QWidget, QHBoxLayout
+from PyQt5.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QCheckBox
 from PyQt5.QtWidgets import QPushButton, QVBoxLayout, QApplication, QSlider
 from PyQt5.QtWidgets import QLineEdit, QInputDialog, QLabel, QStyleFactory
 from PyQt5 import *
@@ -40,11 +40,14 @@ class StartWindow(QMainWindow):
         self.label_movingpt = QLabel("MovingPoints")
         self.label_roi = QLabel("ROI")
         self.label_datalen = QLabel("Length")
+        self.cbox_raw= QCheckBox("ShowRawData")
+
 
         self.value_framerate = QLineEdit("100")
         self.value_movingpt = QLineEdit("10")
         self.value_roi = QLineEdit("195, 148, 224, 216")
         self.value_datalen = QLineEdit("100")
+        self.cbox_raw.setChecked(True)
 
 
         # parameters
@@ -63,7 +66,7 @@ class StartWindow(QMainWindow):
         self.rplt = self.gwin.addPlot()
 
         self.pen1 = pg.mkPen('r', width=2)
-        self.pen2 = pg.mkPen(color=(000, 155, 155),width=2)
+        self.pen2 = pg.mkPen(color=(255, 15, 15),width=2)
         self.pen3 = pg.mkPen(color=(000, 155, 115), style=QtCore.Qt.DotLine)
         self.curve = self.rplt.plot(pen=self.pen3)
         self.curve2 = self.rplt.plot(pen=self.pen2)
@@ -94,6 +97,7 @@ class StartWindow(QMainWindow):
         self.dlayout.addWidget(self.value_movingpt)
         self.dlayout.addWidget(self.label_roi)
         self.dlayout.addWidget(self.value_roi)
+        self.dlayout.addWidget(self.cbox_raw)
 
         self.ilayout.addWidget(self.image_view)
         self.ilayout.addWidget(self.roi_view)
@@ -130,9 +134,9 @@ class StartWindow(QMainWindow):
     def reset_run(self):
         self.data=[]
         self.avg_data=[]
-        self.rplt.clear()
-        self.curve = self.rplt.plot(pen=self.pen3)
-        self.curve2 = self.rplt.plot(pen=self.pen1)
+        # self.rplt.clear()
+        self.curve.clear()
+        self.curve2.clear()
 
     def update_roi(self):
         self.frame = self.camera.get_frame()
@@ -151,29 +155,39 @@ class StartWindow(QMainWindow):
         a = np.array(self.data)
         tsum = np.cumsum(a, dtype=float)
         tsum[self.movingpt:] = tsum[self.movingpt:] - tsum[:-self.movingpt]
-        return tsum[self.movingpt - 1:] / self.movingpt
+        tsum = tsum[self.movingpt - 1:] / self.movingpt
+        # e=len(a)-len(tsum)
+        # tsum = np.insert(tsum, 0, tsum[:e])
+        return tsum
 
     def update_plot(self):
-        # global data, curve, count
+        mlen = self.datalen
         self.data.append(np.sum(self.roi_img))
         if len(self.data) > self.datalen:
             self.data.pop(0)
         if len(self.data) > self.movingpt + 5:
-            self.avg_data = list(self.moving_average())
-            self.curve2.setData(np.hstack(self.avg_data))
-        self.curve.setData(np.hstack(self.data))
+            mdata = self.moving_average()
+            mlen = len(mdata)
+            self.curve2.setData(mdata)
+        if self.cbox_raw.isChecked():
+            self.curve.setData(np.hstack(self.data[-mlen:]))
+        else:
+            self.curve.clear()
 
     def update_parameters(self):
         if self.value_framerate.text().isdigit():
             self.framerate = int(self.value_framerate.text())
         if self.value_datalen.text().isdigit():
             self.datalen = int(self.value_datalen.text())
+        if self.value_movingpt.text().isdigit():
+            self.movingpt= int(self.value_movingpt.text())
         temproi = self.value_roi.text().split(sep=",")
         self.roi = list(map(int,temproi))
         del temproi
 
     def save_parameters(self):
         tfile = open("./log.txt", "a+")
+        tfile.write("\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
         tfile.write("\n DateTime:: ")
         tfile.write(str(datetime.now()))
         tfile.write("\nROI:: ")
@@ -181,11 +195,11 @@ class StartWindow(QMainWindow):
         tfile.write("\n")
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
-        fileName, _ = QFileDialog.getSaveFileName(self,"Enter Image Name","","All Files (*);;Text Files (*.txt)", options=options)
+        fileName, _ = QFileDialog.getSaveFileName(self,"Enter Image Name","./ImageFiles/","All Files (*);;Text Files (*.txt)", options=options)
         if fileName:
             print(fileName)
             cv2.imwrite(fileName,self.frame)
-            tfile.write("\nImageFile:: ")
+            tfile.write("ImageFile:: ")
             tfile.write(str(fileName))
             tfile.write("\n")
             tfile.close()

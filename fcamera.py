@@ -16,9 +16,10 @@ class Camera:
 
     def get_frame(self):
         ret, self.frame = self.cap.read()
-        self.shape = self.frame.shape
-        if np.array_equal(self.shape,self.first_shape):
-            return self.frame
+        if self.frame is not None:
+            self.shape = self.frame.shape
+            if np.array_equal(self.shape,self.first_shape):
+                return self.frame
         else:
             return self.first_frame
 
