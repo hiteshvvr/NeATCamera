@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QApplication
 
-from models import Camera
-from views import StartWindow
+from fcamera import Camera
+from fprocess import StartWindow
 
 camera = Camera(0)
 camera.initialize()
