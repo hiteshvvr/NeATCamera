@@ -4,10 +4,15 @@ from PyQt5.QtCore import Qt, QThread, QTimer
 from PyQt5.QtWidgets import QMainWindow, QWidget, QHBoxLayout
 from PyQt5.QtWidgets import QPushButton, QVBoxLayout, QApplication, QSlider
 from PyQt5.QtWidgets import QLineEdit, QInputDialog, QLabel, QStyleFactory
+from PyQt5 import *
+from PyQt5.QtWidgets import QWidget, QInputDialog, QLineEdit, QFileDialog
+from PyQt5.QtGui import QIcon
+
 from pyqtgraph import ImageView
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
 import cv2
+from datetime import datetime
 
 
 class StartWindow(QMainWindow):
@@ -25,28 +30,28 @@ class StartWindow(QMainWindow):
         self.frame = self.camera.get_frame()
         self.roi_img = self.frame
         # First Horizon row Widgets
-        self.button_start = QPushButton('Start')
-        self.button_stop = QPushButton('Stop')
+        self.button_start = QPushButton("Start/Stop")
+        self.button_start.setCheckable(True)
+        self.button_reset= QPushButton('Reset')
+        self.button_save= QPushButton('SaveData')
         # Second Horizontal row Widgets
         self.button_update = QPushButton("Update")
-        self.rate = QLabel("Rate")
-        self.Dalen = QLabel("Length")
-        self.roi1 = QLabel("ROI1")
-        self.roi2 = QLabel("ROI2")
-        self.roi3 = QLabel("ROI3")
-        self.roi4 = QLabel("ROI4")
-        self.uprate = QLineEdit("100")
-        self.dlen = QLineEdit()
-        self.r1 = QLineEdit()
-        self.r2 = QLineEdit()
-        self.r3 = QLineEdit()
-        self.r4 = QLineEdit()
+        self.label_framerate = QLabel("FRate\n(in millisec)")
+        self.label_movingpt = QLabel("MovingPoints")
+        self.label_roi = QLabel("ROI")
+        self.label_datalen = QLabel("Length")
+
+        self.value_framerate = QLineEdit("100")
+        self.value_movingpt = QLineEdit("10")
+        self.value_roi = QLineEdit("195, 148, 224, 216")
+        self.value_datalen = QLineEdit("100")
+
 
         # parameters
         self.framerate = 100
         self.roi = [195, 148, 224, 216]
         self.datalen = 100
-        self.n = 10
+        self.movingpt = 10
 
         # Image View Widgets
         self.image_view = ImageView(self.aimwig)
@@ -56,14 +61,12 @@ class StartWindow(QMainWindow):
         # Intensity Graph Widget
         self.gwin = pg.GraphicsWindow()
         self.rplt = self.gwin.addPlot()
-        # Make a dashed yellow line 2px wide
+
         self.pen1 = pg.mkPen('r', width=2)
-        # Make a dashed yellow line 2px wide
-        self.pen3 = pg.mkPen('g', width=2)
-        # Dotted pale-blue line
-        self.pen2 = pg.mkPen(color=(000, 000, 255), style=QtCore.Qt.DotLine)
-        self.curve = self.rplt.plot(pen=self.pen1)
-        self.curve2 = self.rplt.plot(pen=self.pen3)
+        self.pen2 = pg.mkPen(color=(000, 155, 155),width=2)
+        self.pen3 = pg.mkPen(color=(000, 155, 115), style=QtCore.Qt.DotLine)
+        self.curve = self.rplt.plot(pen=self.pen3)
+        self.curve2 = self.rplt.plot(pen=self.pen2)
         self.rplt.showGrid(x=True, y=True)
         self.data = []
         self.avg_data = []
@@ -80,20 +83,17 @@ class StartWindow(QMainWindow):
         self.ilayout = QHBoxLayout()
 
         self.blayout.addWidget(self.button_start)
-        self.blayout.addWidget(self.button_stop)
+        self.blayout.addWidget(self.button_reset)
+        self.blayout.addWidget(self.button_save)
         self.dlayout.addWidget(self.button_update)
-        self.dlayout.addWidget(self.rate)
-        self.dlayout.addWidget(self.uprate)
-        self.dlayout.addWidget(self.Dalen)
-        self.dlayout.addWidget(self.dlen)
-        self.dlayout.addWidget(self.roi1)
-        self.dlayout.addWidget(self.r1)
-        self.dlayout.addWidget(self.roi2)
-        self.dlayout.addWidget(self.r2)
-        self.dlayout.addWidget(self.roi3)
-        self.dlayout.addWidget(self.r3)
-        self.dlayout.addWidget(self.roi4)
-        self.dlayout.addWidget(self.r4)
+        self.dlayout.addWidget(self.label_framerate)
+        self.dlayout.addWidget(self.value_framerate)
+        self.dlayout.addWidget(self.label_datalen)
+        self.dlayout.addWidget(self.value_datalen)
+        self.dlayout.addWidget(self.label_movingpt)
+        self.dlayout.addWidget(self.value_movingpt)
+        self.dlayout.addWidget(self.label_roi)
+        self.dlayout.addWidget(self.value_roi)
 
         self.ilayout.addWidget(self.image_view)
         self.ilayout.addWidget(self.roi_view)
@@ -108,8 +108,9 @@ class StartWindow(QMainWindow):
 
         # Functionality
         self.button_start.clicked.connect(self.update_image)
-        self.button_stop.clicked.connect(self.stop_run)
+        self.button_reset.clicked.connect(self.reset_run)
         self.button_update.clicked.connect(self.update_parameters)
+        self.button_save.clicked.connect(self.save_parameters)
         self.slider.valueChanged.connect(self.update_brightness)
 
         self.update_timer = QTimer()
@@ -120,10 +121,18 @@ class StartWindow(QMainWindow):
     def update_image(self):
         self.frame = self.camera.get_frame()
         self.image_view.setImage(self.frame.T)
-        self.update_timer.start(self.framerate)
+        if self.button_start.isChecked():
+            self.update_timer.start(self.framerate)
+        if self.button_start.isChecked() is False:
+            self.update_timer.stop()
 
-    def stop_run(self):
-        self.update_timer.stop()
+
+    def reset_run(self):
+        self.data=[]
+        self.avg_data=[]
+        self.rplt.clear()
+        self.curve = self.rplt.plot(pen=self.pen3)
+        self.curve2 = self.rplt.plot(pen=self.pen1)
 
     def update_roi(self):
         self.frame = self.camera.get_frame()
@@ -140,41 +149,46 @@ class StartWindow(QMainWindow):
 
     def moving_average(self):
         a = np.array(self.data)
-        ret = np.cumsum(a, dtype=float)
-        ret[self.n:] = ret[self.n:] - ret[:-self.n]
-        return ret[self.n - 1:] / self.n
+        tsum = np.cumsum(a, dtype=float)
+        tsum[self.movingpt:] = tsum[self.movingpt:] - tsum[:-self.movingpt]
+        return tsum[self.movingpt - 1:] / self.movingpt
 
     def update_plot(self):
         # global data, curve, count
         self.data.append(np.sum(self.roi_img))
         if len(self.data) > self.datalen:
             self.data.pop(0)
-        if len(self.data) > 20:
+        if len(self.data) > self.movingpt + 5:
             self.avg_data = list(self.moving_average())
             self.curve2.setData(np.hstack(self.avg_data))
         self.curve.setData(np.hstack(self.data))
-        self.count += 1
 
     def update_parameters(self):
-        if self.uprate.text().isdigit():
-            self.framerate = int(self.uprate.text())
-            print(int(self.uprate.text()))
-        if self.r1.text().isdigit():
-            self.roi[0] = int(self.r1.text())
-        if self.r2.text().isdigit():
-            self.roi[1] = int(self.r2.text())
-        if self.r3.text().isdigit():
-            self.roi[2] = int(self.r3.text())
-        if self.r4.text().isdigit():
-            self.roi[3] = int(self.r4.text())
-        if self.dlen.text().isdigit():
-            self.datalen = int(self.dlen.text())
+        if self.value_framerate.text().isdigit():
+            self.framerate = int(self.value_framerate.text())
+        if self.value_datalen.text().isdigit():
+            self.datalen = int(self.value_datalen.text())
+        temproi = self.value_roi.text().split(sep=",")
+        self.roi = list(map(int,temproi))
+        del temproi
 
-        # if self.uprate.text().isdigit():
-        #     self.framerate = int(self.uprate.text())
-        # if self.uprate.text().isdigit():
-        #     self.framerate = int(self.uprate.text())
-
+    def save_parameters(self):
+        tfile = open("./log.txt", "a+")
+        tfile.write("\n DateTime:: ")
+        tfile.write(str(datetime.now()))
+        tfile.write("\nROI:: ")
+        tfile.write(str(self.roi))
+        tfile.write("\n")
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        fileName, _ = QFileDialog.getSaveFileName(self,"Enter Image Name","","All Files (*);;Text Files (*.txt)", options=options)
+        if fileName:
+            print(fileName)
+            cv2.imwrite(fileName,self.frame)
+            tfile.write("\nImageFile:: ")
+            tfile.write(str(fileName))
+            tfile.write("\n")
+            tfile.close()
 
 if __name__ == '__main__':
     app = QApplication([])

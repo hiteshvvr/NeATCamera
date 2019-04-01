@@ -1,0 +1,4 @@
+DateTime:: 2019-04-01 13:38:55.804000
+ROI:: [195, 148, 224, 216]DateTime:: 2019-04-01 13:39:04.458000
+ROI:: [195, 148, 224, 216]
+ImageFile:: C:/Users/USER/Dropbox/Neon_MOT/Cameras/uEye/Github/NeatCamera/first.png

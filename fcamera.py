@@ -7,16 +7,22 @@ class Camera:
     def __init__(self, cam_num):
         self.cam_num = cam_num
         self.cap = None
-        self.last_frame = np.zeros((1,1))
+        self.frame = np.zeros((1,1))
 
     def initialize(self):
         self.cap = cv2.VideoCapture(self.cam_num)
+        ret, self.first_frame = self.cap.read()
+        self.first_shape = self.first_frame.shape
 
     def get_frame(self):
-        ret, self.last_frame = self.cap.read()
-        return self.last_frame
+        ret, self.frame = self.cap.read()
+        self.shape = self.frame.shape
+        if np.array_equal(self.shape,self.first_shape):
+            return self.frame
+        else:
+            return self.first_frame
 
-    def acquire_movie(self, num_frames):
+    def acquire_movie(self, num_frames=10):
         movie = []
         for _ in range(num_frames):
             movie.append(self.get_frame())
