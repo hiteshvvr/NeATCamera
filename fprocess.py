@@ -41,6 +41,13 @@ class StartWindow(QMainWindow):
         self.label_roi = QLabel("ROI")
         self.label_datalen = QLabel("Length")
         self.cbox_raw= QCheckBox("ShowRawData")
+        # Bottom slider Widgets
+        self.label_eslider= QLabel("Exposure")
+        self.slider_eslider = QSlider(Qt.Horizontal)
+        self.slider_eslider.setRange(0, 100)
+        self.label_gslider= QLabel("Gain")
+        self.slider_gslider = QSlider(Qt.Horizontal)
+        self.slider_gslider.setRange(0, 100)
 
 
         self.value_framerate = QLineEdit("100")
@@ -75,39 +82,44 @@ class StartWindow(QMainWindow):
         self.avg_data = []
         self.count = 0
 
-        # Slider Widget // Not used now
-        self.slider = QSlider(Qt.Horizontal)
-        self.slider.setRange(0, 10)
-
         # Layouts
-        self.mlayout = QVBoxLayout(self.central_widget)
-        self.blayout = QHBoxLayout()
-        self.dlayout = QHBoxLayout()
-        self.ilayout = QHBoxLayout()
+        self.mainlayout = QVBoxLayout(self.central_widget)
+        self.btn1layout = QHBoxLayout()
+        self.btn2layout = QHBoxLayout()
+        self.img1layout = QHBoxLayout()
+        self.sld1layout = QHBoxLayout()
 
-        self.blayout.addWidget(self.button_start)
-        self.blayout.addWidget(self.button_reset)
-        self.blayout.addWidget(self.button_save)
-        self.dlayout.addWidget(self.button_update)
-        self.dlayout.addWidget(self.label_framerate)
-        self.dlayout.addWidget(self.value_framerate)
-        self.dlayout.addWidget(self.label_datalen)
-        self.dlayout.addWidget(self.value_datalen)
-        self.dlayout.addWidget(self.label_movingpt)
-        self.dlayout.addWidget(self.value_movingpt)
-        self.dlayout.addWidget(self.label_roi)
-        self.dlayout.addWidget(self.value_roi)
-        self.dlayout.addWidget(self.cbox_raw)
 
-        self.ilayout.addWidget(self.image_view)
-        self.ilayout.addWidget(self.roi_view)
+        self.btn1layout.addWidget(self.button_start)
+        self.btn1layout.addWidget(self.button_reset)
+        self.btn1layout.addWidget(self.button_save)
+        self.btn2layout.addWidget(self.button_update)
+        self.btn2layout.addWidget(self.label_framerate)
+        self.btn2layout.addWidget(self.value_framerate)
+        self.btn2layout.addWidget(self.label_datalen)
+        self.btn2layout.addWidget(self.value_datalen)
+        self.btn2layout.addWidget(self.label_movingpt)
+        self.btn2layout.addWidget(self.value_movingpt)
+        self.btn2layout.addWidget(self.label_roi)
+        self.btn2layout.addWidget(self.value_roi)
+        self.btn2layout.addWidget(self.cbox_raw)
 
-        self.mlayout.addLayout(self.blayout)
-        self.mlayout.addLayout(self.dlayout)
-        self.mlayout.addLayout(self.ilayout)
+        self.img1layout.addWidget(self.image_view)
+        self.img1layout.addWidget(self.roi_view)
 
-        self.mlayout.addWidget(self.gwin)
-        self.mlayout.addWidget(self.slider)
+        self.sld1layout.addWidget(self.label_eslider)
+        self.sld1layout.addWidget(self.slider_eslider)
+        self.sld1layout.addWidget(self.label_gslider)
+        self.sld1layout.addWidget(self.slider_gslider)
+
+        self.mainlayout.addLayout(self.btn1layout)
+        self.mainlayout.addLayout(self.btn2layout)
+        self.mainlayout.addLayout(self.img1layout)
+        self.mainlayout.addLayout(self.sld1layout)
+
+        self.mainlayout.addWidget(self.gwin)
+        # self.mainlayout.addWidget(self.eslider)
+        # self.mainlayout.addWidget(self.gslider)
         self.setCentralWidget(self.central_widget)
 
         # Functionality
@@ -115,7 +127,8 @@ class StartWindow(QMainWindow):
         self.button_reset.clicked.connect(self.reset_run)
         self.button_update.clicked.connect(self.update_parameters)
         self.button_save.clicked.connect(self.save_parameters)
-        self.slider.valueChanged.connect(self.update_brightness)
+        self.slider_eslider.valueChanged.connect(self.update_exposure)
+        self.slider_gslider.valueChanged.connect(self.update_gain)
 
         self.update_timer = QTimer()
         self.update_timer.timeout.connect(self.update_image)
@@ -147,9 +160,11 @@ class StartWindow(QMainWindow):
             r[1] + r[3]), int(r[0]):int(r[0] + r[2])]
         self.roi_view.setImage(self.roi_img.T)
 
-    def update_brightness(self, value):
-        value /= 10
-        self.camera.set_brightness(value)
+    def update_exposure(self, value):
+        self.camera.set_exposure(value)
+
+    def update_gain(self, value):
+        self.camera.set_gain(value)
 
     def moving_average(self):
         a = np.array(self.data)
