@@ -188,13 +188,13 @@ class StartWindow(QMainWindow):
     def save_parameters(self):
         tfile = open("./log.txt", "a+")
         tfile.write("\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
-        tfile.write("\n DateTime:: ")
+        tfile.write("\nDateTime:: ")
         tfile.write(str(datetime.now()))
         tfile.write("\nROI:: ")
         tfile.write(str(self.roi))
         tfile.write("\n")
         options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog
+    # options |= QFileDialog.DontUseNativeDialog
         fileName, _ = QFileDialog.getSaveFileName(self,"Enter Image Name","./ImageFiles/","All Files (*);;Text Files (*.txt)", options=options)
         if fileName:
             print(fileName)
