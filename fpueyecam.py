@@ -86,6 +86,7 @@ class Camera:
         pass
 
     def set_exposure(self, value):
+        self.stopcam()
         # range is 0 to 33 ms
         value = value*33/100
         self.brig = ueye.double(value)
@@ -93,7 +94,8 @@ class Camera:
         self.ret = ueye.is_Exposure(self.hcam, ueye.IS_EXPOSURE_CMD_SET_EXPOSURE, self.brig, 8)
         if self.ret == ueye.IS_SUCCESS:
             print('  tried to changed exposure time to      %8.3f ms' % self.brig)
-
+        self.acquireimage()
+        
     def get_brightness(self):
         self.ret = ueye.is_Exposure(self.hcam, ueye.IS_EXPOSURE_CMD_GET_EXPOSURE, self.brig, 8)
         if self.ret == ueye.IS_SUCCESS:

@@ -137,7 +137,7 @@ class StartWindow(QMainWindow):
 
     def update_image(self):
         self.frame = self.camera.get_frame()
-        self.image_view.setImage(self.frame.T)
+        self.image_view.setImage(self.frame.T,autoHistogramRange=False)
         if self.button_start.isChecked():
             self.update_timer.start(self.framerate)
         if self.button_start.isChecked() is False:
@@ -161,7 +161,9 @@ class StartWindow(QMainWindow):
         self.roi_view.setImage(self.roi_img.T)
 
     def update_exposure(self, value):
+        self.button_start.setChecked(False)
         self.camera.set_exposure(value)
+        self.button_start.setChecked(True)
 
     def update_gain(self, value):
         self.camera.set_gain(value)
