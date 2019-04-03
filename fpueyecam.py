@@ -93,7 +93,7 @@ class Camera:
         print(self.brig)
         self.ret = ueye.is_Exposure(self.hcam, ueye.IS_EXPOSURE_CMD_SET_EXPOSURE, self.brig, 8)
         if self.ret == ueye.IS_SUCCESS:
-            print('  tried to changed exposure time to      %8.3f ms' % self.brig)
+            print(' aa tried to changed exposure time to      %8.3f ms' % self.brig)
         self.acquireimage()
         
     def get_brightness(self):
