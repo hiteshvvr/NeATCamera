@@ -72,6 +72,21 @@ class StartWindow(QMainWindow):
         self.gwin = pg.GraphicsWindow()
         self.rplt = self.gwin.addPlot()
 
+        self.camraw = pg.GraphicsWindow()
+        self.rawplot = self.camraw.addPlot()
+        self.rawplot.hideAxis('left')
+        self.rawplot.hideAxis('bottom')
+        self.frame = self.camera.get_frame()
+        self.rawimg = pg.ImageItem(self.frame)
+        self.rawplot.addItem(self.rawimg)
+
+        self.camroi = pg.GraphicsWindow()
+        self.roiplot = self.camroi.addPlot()
+        self.roiplot.hideAxis('left')
+        self.roiplot.hideAxis('bottom')
+        self.roiimg = pg.ImageItem(self.frame)
+        self.roiplot.addItem(self.roiimg)
+
         self.pen1 = pg.mkPen('r', width=2)
         self.pen2 = pg.mkPen(color=(255, 15, 15),width=2)
         self.pen3 = pg.mkPen(color=(000, 155, 115), style=QtCore.Qt.DotLine)
@@ -88,6 +103,7 @@ class StartWindow(QMainWindow):
         self.btn2layout = QHBoxLayout()
         self.img1layout = QHBoxLayout()
         self.sld1layout = QHBoxLayout()
+        self.sld2layout = QHBoxLayout()
 
 
         self.btn1layout.addWidget(self.button_start)
@@ -104,8 +120,11 @@ class StartWindow(QMainWindow):
         self.btn2layout.addWidget(self.value_roi)
         self.btn2layout.addWidget(self.cbox_raw)
 
-        self.img1layout.addWidget(self.image_view)
-        self.img1layout.addWidget(self.roi_view)
+        # self.img1layout.addWidget(self.image_view)
+        # self.img1layout.addWidget(self.roi_view)
+
+        self.sld2layout.addWidget(self.camraw)
+        self.sld2layout.addWidget(self.camroi)
 
         self.sld1layout.addWidget(self.label_eslider)
         self.sld1layout.addWidget(self.slider_eslider)
@@ -114,7 +133,8 @@ class StartWindow(QMainWindow):
 
         self.mainlayout.addLayout(self.btn1layout)
         self.mainlayout.addLayout(self.btn2layout)
-        self.mainlayout.addLayout(self.img1layout)
+        # self.mainlayout.addLayout(self.img1layout)
+        self.mainlayout.addLayout(self.sld2layout)
         self.mainlayout.addLayout(self.sld1layout)
 
         self.mainlayout.addWidget(self.gwin)
@@ -137,7 +157,11 @@ class StartWindow(QMainWindow):
 
     def update_image(self):
         self.frame = self.camera.get_frame()
-        self.image_view.setImage(self.frame.T,autoHistogramRange=False)
+        self.rawimg = pg.ImageItem(self.frame)
+        print(np.shape(self.frame))
+        print(np.shape(self.frame))
+        # self.image_view.setImage(self.frame.T,autoHistogramRange=False)
+        self.rawplot.addItem(self.rawimg)
         if self.button_start.isChecked():
             self.update_timer.start(self.framerate)
         if self.button_start.isChecked() is False:
@@ -158,7 +182,8 @@ class StartWindow(QMainWindow):
         r = np.array(r)
         self.roi_img = self.frame[int(r[1]):int(
             r[1] + r[3]), int(r[0]):int(r[0] + r[2])]
-        self.roi_view.setImage(self.roi_img.T)
+        self.roiimg = pg.ImageItem(self.roi_img)
+        self.roi_view.setImage(self.roiimg)
 
     def update_exposure(self, value):
         self.button_start.setChecked(False)

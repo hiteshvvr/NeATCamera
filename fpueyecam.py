@@ -78,8 +78,9 @@ class Camera:
         # ...reshape it in an numpy array...
         self.frame = np.reshape(
             array, (self.height.value, self.width.value, self.bytes_per_pixel))
-        print(np.shape(self.frame))
-        print(np.sum(self.frame))
+        self.frame = self.frame[:,:,0]
+        # print(np.shape(self.frame))
+        # print(np.sum(self.frame))
         return self.frame
 
     def acquire_movie(self, num_frames=10):
