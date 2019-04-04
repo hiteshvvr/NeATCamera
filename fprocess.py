@@ -10,6 +10,7 @@ from PyQt5.QtGui import QIcon
 
 from pyqtgraph import ImageView
 import pyqtgraph as pg
+import pyqtgraph.exporters
 from pyqtgraph.Qt import QtCore, QtGui
 import cv2
 from datetime import datetime
@@ -25,10 +26,18 @@ class StartWindow(QMainWindow):
         self.aimwig = QWidget()
         QApplication.setStyle(QStyleFactory.create('Fusion'))
         # self.changePalette()
+        
+        # parameters
+        self.framerate = 50
+        self.roi = [195, 148, 224, 216]
+        self.datalen = 150
+        self.movingpt = 50
+        self.exp = 50
+        self.gain = 50
+
         # Camera
         self.camera = camera
-        self.frame = self.camera.get_frame()
-        self.roi_img = self.frame
+
         # First Horizon row Widgets
         self.button_start = QPushButton("Start/Stop")
         self.button_start.setCheckable(True)
@@ -41,20 +50,24 @@ class StartWindow(QMainWindow):
         self.label_roi = QLabel("ROI")
         self.label_datalen = QLabel("Length")
         self.cbox_raw= QCheckBox("ShowRawData")
+        # Bottom slider Widgets
+        self.label_eslider= QLabel("Exposure: " + str(self.exp))
+        self.slider_eslider = QSlider(Qt.Horizontal)
+        self.slider_eslider.setRange(0, 100)
+        self.camera.set_exposure(self.exp)
+        self.slider_eslider.setValue(self.exp)
+        self.label_gslider= QLabel("Gain" + str(self.gain) )
+        self.slider_gslider = QSlider(Qt.Horizontal)
+        self.slider_gslider.setRange(0, 100)
+        self.slider_gslider.setValue(self.gain)
 
 
-        self.value_framerate = QLineEdit("100")
-        self.value_movingpt = QLineEdit("10")
-        self.value_roi = QLineEdit("195, 148, 224, 216")
-        self.value_datalen = QLineEdit("100")
+        self.value_framerate = QLineEdit(str(self.framerate))
+        self.value_movingpt = QLineEdit(str(self.movingpt))
+        self.value_roi = QLineEdit(str(self.roi)[1:-1])
+        self.value_datalen = QLineEdit(str(self.datalen))
         self.cbox_raw.setChecked(True)
 
-
-        # parameters
-        self.framerate = 100
-        self.roi = [195, 148, 224, 216]
-        self.datalen = 100
-        self.movingpt = 10
 
         # Image View Widgets
         self.image_view = ImageView(self.aimwig)
@@ -75,39 +88,42 @@ class StartWindow(QMainWindow):
         self.avg_data = []
         self.count = 0
 
-        # Slider Widget // Not used now
-        self.slider = QSlider(Qt.Horizontal)
-        self.slider.setRange(0, 10)
-
         # Layouts
-        self.mlayout = QVBoxLayout(self.central_widget)
-        self.blayout = QHBoxLayout()
-        self.dlayout = QHBoxLayout()
-        self.ilayout = QHBoxLayout()
+        self.mainlayout = QVBoxLayout(self.central_widget)
+        self.btn1layout = QHBoxLayout()
+        self.btn2layout = QHBoxLayout()
+        self.img1layout = QHBoxLayout()
+        self.sld1layout = QHBoxLayout()
 
-        self.blayout.addWidget(self.button_start)
-        self.blayout.addWidget(self.button_reset)
-        self.blayout.addWidget(self.button_save)
-        self.dlayout.addWidget(self.button_update)
-        self.dlayout.addWidget(self.label_framerate)
-        self.dlayout.addWidget(self.value_framerate)
-        self.dlayout.addWidget(self.label_datalen)
-        self.dlayout.addWidget(self.value_datalen)
-        self.dlayout.addWidget(self.label_movingpt)
-        self.dlayout.addWidget(self.value_movingpt)
-        self.dlayout.addWidget(self.label_roi)
-        self.dlayout.addWidget(self.value_roi)
-        self.dlayout.addWidget(self.cbox_raw)
 
-        self.ilayout.addWidget(self.image_view)
-        self.ilayout.addWidget(self.roi_view)
+        self.btn1layout.addWidget(self.button_start)
+        self.btn1layout.addWidget(self.button_reset)
+        self.btn1layout.addWidget(self.button_save)
+        self.btn2layout.addWidget(self.button_update)
+        self.btn2layout.addWidget(self.label_framerate)
+        self.btn2layout.addWidget(self.value_framerate)
+        self.btn2layout.addWidget(self.label_datalen)
+        self.btn2layout.addWidget(self.value_datalen)
+        self.btn2layout.addWidget(self.label_movingpt)
+        self.btn2layout.addWidget(self.value_movingpt)
+        self.btn2layout.addWidget(self.label_roi)
+        self.btn2layout.addWidget(self.value_roi)
+        self.btn2layout.addWidget(self.cbox_raw)
 
-        self.mlayout.addLayout(self.blayout)
-        self.mlayout.addLayout(self.dlayout)
-        self.mlayout.addLayout(self.ilayout)
+        self.img1layout.addWidget(self.image_view)
+        self.img1layout.addWidget(self.roi_view)
 
-        self.mlayout.addWidget(self.gwin)
-        self.mlayout.addWidget(self.slider)
+        self.sld1layout.addWidget(self.label_eslider)
+        self.sld1layout.addWidget(self.slider_eslider)
+        self.sld1layout.addWidget(self.label_gslider)
+        self.sld1layout.addWidget(self.slider_gslider)
+
+        self.mainlayout.addLayout(self.btn1layout)
+        self.mainlayout.addLayout(self.btn2layout)
+        self.mainlayout.addLayout(self.img1layout)
+        self.mainlayout.addLayout(self.sld1layout)
+
+        self.mainlayout.addWidget(self.gwin)
         self.setCentralWidget(self.central_widget)
 
         # Functionality
@@ -115,16 +131,26 @@ class StartWindow(QMainWindow):
         self.button_reset.clicked.connect(self.reset_run)
         self.button_update.clicked.connect(self.update_parameters)
         self.button_save.clicked.connect(self.save_parameters)
-        self.slider.valueChanged.connect(self.update_brightness)
+        self.slider_eslider.valueChanged.connect(self.update_exposure)
+        self.slider_gslider.valueChanged.connect(self.update_gain)
 
         self.update_timer = QTimer()
         self.update_timer.timeout.connect(self.update_image)
-        self.update_timer.timeout.connect(self.update_roi)
         self.update_timer.timeout.connect(self.update_plot)
+
+        ## SETTING UP FIRST IMAGE
+        self.first_frame = self.camera.get_frame()
+        self.update_image()
+        self.first_roi = self.getroiimage()
+
+
 
     def update_image(self):
         self.frame = self.camera.get_frame()
-        self.image_view.setImage(self.frame.T)
+        self.roi_img = self.getroiimage()
+        if(np.sum(self.roi_img)>100):
+            self.roi_view.setImage(self.roi_img.T)
+            self.image_view.setImage(self.frame.T)
         if self.button_start.isChecked():
             self.update_timer.start(self.framerate)
         if self.button_start.isChecked() is False:
@@ -138,26 +164,30 @@ class StartWindow(QMainWindow):
         self.curve.clear()
         self.curve2.clear()
 
-    def update_roi(self):
-        self.frame = self.camera.get_frame()
+    def getroiimage(self):
         # r = [195, 148, 224, 216]
         r = self.roi
         r = np.array(r)
-        self.roi_img = self.frame[int(r[1]):int(
-            r[1] + r[3]), int(r[0]):int(r[0] + r[2])]
-        self.roi_view.setImage(self.roi_img.T)
+        self.roi_img = self.frame[int(r[1]):int(r[1] + r[3]), int(r[0]):int(r[0] + r[2])]
+        return self.roi_img
 
-    def update_brightness(self, value):
-        value /= 10
-        self.camera.set_brightness(value)
+    def update_exposure(self, value):
+        self.exp = value
+        self.button_start.setChecked(False)
+        self.camera.set_exposure(self.exp)
+        self.label_eslider.setText("Exposure:  "+str(self.exp))
+
+    def update_gain(self, value):
+        self.gain = value
+        self.button_start.setChecked(False)
+        self.camera.set_gain(self.gain)
+        self.label_gslider.setText("Gain:  "+str(self.gain))
 
     def moving_average(self):
         a = np.array(self.data)
         tsum = np.cumsum(a, dtype=float)
         tsum[self.movingpt:] = tsum[self.movingpt:] - tsum[:-self.movingpt]
         tsum = tsum[self.movingpt - 1:] / self.movingpt
-        # e=len(a)-len(tsum)
-        # tsum = np.insert(tsum, 0, tsum[:e])
         return tsum
 
     def update_plot(self):
@@ -192,17 +222,18 @@ class StartWindow(QMainWindow):
         tfile.write(str(datetime.now()))
         tfile.write("\nROI:: ")
         tfile.write(str(self.roi))
+        tfile.write("\nExposure:: ")
+        tfile.write(str(self.exp))
+        tfile.write("\nGain:: ")
+        tfile.write(str(self.gain))
         tfile.write("\n")
-        options = QFileDialog.Options()
-    # options |= QFileDialog.DontUseNativeDialog
-        fileName, _ = QFileDialog.getSaveFileName(self,"Enter Image Name","./ImageFiles/","All Files (*);;Text Files (*.txt)", options=options)
-        if fileName:
-            print(fileName)
-            cv2.imwrite(fileName,self.frame)
-            tfile.write("ImageFile:: ")
-            tfile.write(str(fileName))
-            tfile.write("\n")
-            tfile.close()
+        timestamp = datetime.timestamp(datetime.now()) 
+        filename = "camimg" + str(timestamp) + ".png"
+        tfile.write("ImageFile:: ")
+        tfile.write(str(filename))
+        tfile.write("\n")
+        cv2.imwrite(filename,self.frame[:,:,0])
+        tfile.close()
 
 if __name__ == '__main__':
     app = QApplication([])

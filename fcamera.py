@@ -29,13 +29,16 @@ class Camera:
             movie.append(self.get_frame())
         return movie
 
-    def set_brightness(self, value):
+    def set_exposure(self, value):
         self.cap.set(cv2.CAP_PROP_BRIGHTNESS, value)
 
-    def get_brightness(self):
+    def set_gain(self, value):
+        self.cap.set(cv2.CAP_PROP_GAIN, value)
+
+    def get_exposure(self):
         return self.cap.get(cv2.CAP_PROP_BRIGHTNESS)
 
-    def close_camera(self):
+    def stopacquire(self):
         self.cap.release()
 
     def __str__(self):
