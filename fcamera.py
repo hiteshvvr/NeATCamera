@@ -18,7 +18,6 @@ class Camera:
         ret, self.frame = self.cap.read()
         if self.frame is not None:
             self.shape = self.frame.shape
-            print(self.shape)
             if np.array_equal(self.shape,self.first_shape):
                 return self.frame
         else:
@@ -39,7 +38,7 @@ class Camera:
     def get_exposure(self):
         return self.cap.get(cv2.CAP_PROP_BRIGHTNESS)
 
-    def close_camera(self):
+    def stopacquire(self):
         self.cap.release()
 
     def __str__(self):

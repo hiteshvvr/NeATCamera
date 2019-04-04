@@ -67,27 +67,30 @@ class Camera:
         else:
             print("Press q to leave the programm")
 
-    def stopcam(self):
+    def stopacquire(self):
         ueye.is_StopLiveVideo(self.hcam, ueye.IS_FORCE_VIDEO_STOP)
 
 
-    def get_frame(self):
+    def get_data(self):
         array = ueye.get_data(self.pcImageMemory, self.width,
                               self.height, self.nBitsPerPixel, self.pitch, copy=False)
         self.bytes_per_pixel = int(self.nBitsPerPixel / 8)
         # ...reshape it in an numpy array...
-        self.frame = np.reshape(
+        self.data = np.reshape(
             array, (self.height.value, self.width.value, self.bytes_per_pixel))
-        self.frame = self.frame[:,:,0]
-        # print(np.shape(self.frame))
-        # print(np.sum(self.frame))
+        return self.data
+
+    def get_frame(self):
+        self.frame = self.get_data()
+        while(np.sum(self.frame) < 10):
+            self.frame = self.get_data()
         return self.frame
 
     def acquire_movie(self, num_frames=10):
         pass
 
     def set_exposure(self, value):
-        self.stopcam()
+        self.stopacquire()
         # range is 0 to 33 ms
         value = value*33/100
         self.brig = ueye.double(value)
@@ -97,7 +100,7 @@ class Camera:
             print(' aa tried to changed exposure time to      %8.3f ms' % self.brig)
         self.acquireimage()
         
-    def get_brightness(self):
+    def get_exposure(self):
         self.ret = ueye.is_Exposure(self.hcam, ueye.IS_EXPOSURE_CMD_GET_EXPOSURE, self.brig, 8)
         if self.ret == ueye.IS_SUCCESS:
             print('  currently set exposure time            %8.3f ms' % self.brig)
