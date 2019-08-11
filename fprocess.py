@@ -47,6 +47,7 @@ class StartWindow(QMainWindow):
         self.button_save= QPushButton('SaveData')
         # Second Horizontal row Widgets
         self.button_update = QPushButton("Update")
+        self.button_update.setStyleSheet("background-color:rgb(255,0,0)");
         self.button_locklevel= QPushButton("LockLevel")
         self.button_locklevel.setCheckable(True)
         self.label_framerate = QLabel("FRate\n(in millisec)")
@@ -68,6 +69,7 @@ class StartWindow(QMainWindow):
 
         self.value_framerate = QLineEdit(str(self.framerate))
         self.value_movingpt = QLineEdit(str(self.movingpt))
+        self.value_locklevel= QLineEdit(str(self.level))
         self.value_roi = QLineEdit(str(self.roi)[1:-1])
         self.value_datalen = QLineEdit(str(self.datalen))
         self.cbox_raw.setChecked(True)
@@ -105,6 +107,7 @@ class StartWindow(QMainWindow):
         self.btn1layout.addWidget(self.button_save)
         self.btn2layout.addWidget(self.button_update)
         self.btn2layout.addWidget(self.button_locklevel)
+        self.btn2layout.addWidget(self.value_locklevel)
         self.btn2layout.addWidget(self.label_framerate)
         self.btn2layout.addWidget(self.value_framerate)
         self.btn2layout.addWidget(self.label_datalen)
@@ -224,35 +227,52 @@ class StartWindow(QMainWindow):
             self.datalen = int(self.value_datalen.text())
         if self.value_movingpt.text().isdigit():
             self.movingpt= int(self.value_movingpt.text())
+        templevel = self.value_locklevel.text().split(sep=",")
+        self.level= tuple(map(int,templevel))
+        del templevel
         temproi = self.value_roi.text().split(sep=",")
         self.roi = list(map(int,temproi))
         del temproi
 
+    # def save_parameters(self):
+    #     tfile = open("./log.txt", "a+")
+    #     tfile.write("\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+    #     tfile.write("\nDateTime:: ")
+    #     tfile.write(str(datetime.now()))
+    #     tfile.write("\nROI:: ")
+    #     tfile.write(str(self.roi))
+    #     tfile.write("\nExposure:: ")
+    #     tfile.write(str(self.exp))
+    #     tfile.write("\nGain:: ")
+    #     tfile.write(str(self.gain))
+    #     tfile.write("\n")
+    #     tfile.write("Intensity:: ")
+    #     tfile.write(str(np.sum(self.roi_img)))
+    #     tfile.write("\n")
+    #     tfile.write("\nLevel:: ")
+    #     tfile.write(str(self.level))
+    #     tfile.write("\n")
+    #     np.sum(self.roi_img)
+    #     timestamp = datetime.timestamp(datetime.now()) 
+    #     filename = "camimg" + str(timestamp) + ".png"
+    #     tfile.write("ImageFile:: ")
+    #     tfile.write(str(filename))
+    #     tfile.write("\n")
+    #     cv2.imwrite(filename,self.frame[:,:,0])
+    #     tfile.close()
+
     def save_parameters(self):
         tfile = open("./log.txt", "a+")
-        tfile.write("\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
-        tfile.write("\nDateTime:: ")
-        tfile.write(str(datetime.now()))
-        tfile.write("\nROI:: ")
-        tfile.write(str(self.roi))
-        tfile.write("\nExposure:: ")
-        tfile.write(str(self.exp))
-        tfile.write("\nGain:: ")
-        tfile.write(str(self.gain))
-        tfile.write("\n")
-        tfile.write("Intensity:: ")
-        tfile.write(str(np.sum(self.roi_img)))
-        tfile.write("\n")
-        tfile.write("\nLevel:: ")
-        tfile.write(str(self.level))
-        tfile.write("\n")
-        np.sum(self.roi_img)
+
+
         timestamp = datetime.timestamp(datetime.now()) 
         filename = "camimg" + str(timestamp) + ".png"
-        tfile.write("ImageFile:: ")
-        tfile.write(str(filename))
         tfile.write("\n")
         cv2.imwrite(filename,self.frame[:,:,0])
+
+        tfile.write("DateTime,\t\t\t\t\tROI,\t\t\t\t\tExposure,\tGain,\tIntensity(Total),\tIntensity(ROI),\tLevel,\tImagefile,\n")
+        tfile.write(str(datetime.now()) + ",\t" + str(self.roi) + ",\t" + str(self.exp) + ",\t\t\t" + str(self.gain) + ",\t\t" + str(np.sum(self.frame)) + ",\t\t\t" + str(np.sum(self.roi_img)) +",\t\t\t" + str(self.image_view.quickMinMax(self.frame)) + ",\t" + str(filename))
+
         tfile.close()
 
 if __name__ == '__main__':
