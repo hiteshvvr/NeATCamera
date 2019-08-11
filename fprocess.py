@@ -34,6 +34,8 @@ class StartWindow(QMainWindow):
         self.movingpt = 50
         self.exp = 50
         self.gain = 50
+        self.level = None
+        self.lock = True
 
         # Camera
         self.camera = camera
@@ -45,6 +47,8 @@ class StartWindow(QMainWindow):
         self.button_save= QPushButton('SaveData')
         # Second Horizontal row Widgets
         self.button_update = QPushButton("Update")
+        self.button_locklevel= QPushButton("LockLevel")
+        self.button_locklevel.setCheckable(True)
         self.label_framerate = QLabel("FRate\n(in millisec)")
         self.label_movingpt = QLabel("MovingPoints")
         self.label_roi = QLabel("ROI")
@@ -100,6 +104,7 @@ class StartWindow(QMainWindow):
         self.btn1layout.addWidget(self.button_reset)
         self.btn1layout.addWidget(self.button_save)
         self.btn2layout.addWidget(self.button_update)
+        self.btn2layout.addWidget(self.button_locklevel)
         self.btn2layout.addWidget(self.label_framerate)
         self.btn2layout.addWidget(self.value_framerate)
         self.btn2layout.addWidget(self.label_datalen)
@@ -130,6 +135,7 @@ class StartWindow(QMainWindow):
         self.button_start.clicked.connect(self.update_image)
         self.button_reset.clicked.connect(self.reset_run)
         self.button_update.clicked.connect(self.update_parameters)
+        self.button_locklevel.clicked.connect(self.locklevel)
         self.button_save.clicked.connect(self.save_parameters)
         self.slider_eslider.valueChanged.connect(self.update_exposure)
         self.slider_gslider.valueChanged.connect(self.update_gain)
@@ -149,13 +155,20 @@ class StartWindow(QMainWindow):
         self.frame = self.camera.get_frame()
         self.roi_img = self.getroiimage()
         if(np.sum(self.roi_img)>100):
-            self.roi_view.setImage(self.roi_img.T)
-            self.image_view.setImage(self.frame.T)
+            self.roi_view.setImage(self.roi_img.T, autoLevels=self.lock, levels=self.level)
+            self.image_view.setImage(self.frame.T, autoLevels=self.lock, levels=self.level)
         if self.button_start.isChecked():
             self.update_timer.start(self.framerate)
         if self.button_start.isChecked() is False:
             self.update_timer.stop()
 
+    def locklevel(self):
+        if self.button_locklevel.isChecked():
+            self.level = self.image_view.quickMinMax(self.frame)
+            self.lock = False
+        if self.button_locklevel.isChecked() is False:
+            self.level = None
+            self.lock = True 
 
     def reset_run(self):
         self.data=[]
@@ -227,6 +240,13 @@ class StartWindow(QMainWindow):
         tfile.write("\nGain:: ")
         tfile.write(str(self.gain))
         tfile.write("\n")
+        tfile.write("Intensity:: ")
+        tfile.write(str(np.sum(self.roi_img)))
+        tfile.write("\n")
+        tfile.write("\nLevel:: ")
+        tfile.write(str(self.level))
+        tfile.write("\n")
+        np.sum(self.roi_img)
         timestamp = datetime.timestamp(datetime.now()) 
         filename = "camimg" + str(timestamp) + ".png"
         tfile.write("ImageFile:: ")
