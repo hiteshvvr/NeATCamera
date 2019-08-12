@@ -1,0 +1,3 @@
+
+DateTime,					ROI,					Exposure,	Gain,	Intensity(Total),	Intensity(ROI),	Level,	Imagefile,
+2019-08-12 09:34:13.007000,	[195, 148, 224, 216],	50,			73,		612075,			90405,			(0, 11),	camimg1565591653.001.png

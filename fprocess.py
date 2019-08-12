@@ -228,10 +228,13 @@ class StartWindow(QMainWindow):
         if self.value_movingpt.text().isdigit():
             self.movingpt= int(self.value_movingpt.text())
         templevel = self.value_locklevel.text().split(sep=",")
-        self.level= tuple(map(int,templevel))
+        if (len(templevel) == 2):
+            self.level= tuple([int(float(i)) for i in templevel])
+            print(self.level)
         del templevel
         temproi = self.value_roi.text().split(sep=",")
-        self.roi = list(map(int,temproi))
+        if (len(temproi) == 4):
+            self.roi = [int(float(i)) for i in temproi]
         del temproi
 
     # def save_parameters(self):
