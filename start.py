@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QApplication
-from fpueyecam import Camera
-# from fcamera import Camera
+#from fpueyecam import Camera
+from fcamera import Camera
 from fprocess import StartWindow
 
 camera = Camera(0)

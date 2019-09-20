@@ -36,25 +36,47 @@ class StartWindow(QMainWindow):
         self.gain = 50
         self.level = None
         self.lock = True
+        self.avgval = 44
 
         # Camera
         self.camera = camera
 
         # First Horizon row Widgets
         self.button_start = QPushButton("Start/Stop")
+        self.button_start.setStyleSheet("background-color:rgb(252,42,71)")
         self.button_start.setCheckable(True)
-        self.button_reset= QPushButton('Reset')
+        self.button_reset= QPushButton('Reset/Update')
         self.button_save= QPushButton('SaveData')
         # Second Horizontal row Widgets
-        self.button_update = QPushButton("Update")
-        self.button_update.setStyleSheet("background-color:rgb(255,0,0)");
         self.button_locklevel= QPushButton("LockLevel")
         self.button_locklevel.setCheckable(True)
-        self.label_framerate = QLabel("FRate\n(in millisec)")
+
+        self.value_locklevel= QLineEdit(str(self.level))
+        self.value_locklevel.textChanged.connect(self.update_parameters)
+
+        self.label_framerate = QLabel("FRate(millisec)")
+        self.value_framerate = QLineEdit(str(self.framerate))
+        self.value_framerate.textChanged.connect(self.update_parameters)
+
         self.label_movingpt = QLabel("MovingPoints")
+        self.value_movingpt = QLineEdit(str(self.movingpt))
+        self.value_movingpt.textChanged.connect(self.update_parameters)
+
         self.label_roi = QLabel("ROI")
+        self.value_roi = QLineEdit(str(self.roi)[1:-1])
+        self.value_roi.setFixedWidth(200)
+        self.value_roi.textChanged.connect(self.change_reset_col)
+
         self.label_datalen = QLabel("Length")
-        self.cbox_raw= QCheckBox("ShowRawData")
+        self.value_datalen = QLineEdit(str(self.datalen))
+        self.value_datalen.textChanged.connect(self.update_parameters)
+
+        self.cbox_raw= QCheckBox("RawCurve")
+        self.cbox_raw.setChecked(True)
+
+        self.label_avgval = QLabel("AvgVal: " + str(format(int(self.avgval),"010d")))
+        self.label_avgval.setStyleSheet("border: 1px solid black");
+
         # Bottom slider Widgets
         self.label_eslider= QLabel("Exposure: " + str(self.exp))
         self.slider_eslider = QSlider(Qt.Horizontal)
@@ -65,14 +87,6 @@ class StartWindow(QMainWindow):
         self.slider_gslider = QSlider(Qt.Horizontal)
         self.slider_gslider.setRange(0, 100)
         self.slider_gslider.setValue(self.gain)
-
-
-        self.value_framerate = QLineEdit(str(self.framerate))
-        self.value_movingpt = QLineEdit(str(self.movingpt))
-        self.value_locklevel= QLineEdit(str(self.level))
-        self.value_roi = QLineEdit(str(self.roi)[1:-1])
-        self.value_datalen = QLineEdit(str(self.datalen))
-        self.cbox_raw.setChecked(True)
 
 
         # Image View Widgets
@@ -105,7 +119,6 @@ class StartWindow(QMainWindow):
         self.btn1layout.addWidget(self.button_start)
         self.btn1layout.addWidget(self.button_reset)
         self.btn1layout.addWidget(self.button_save)
-        self.btn2layout.addWidget(self.button_update)
         self.btn2layout.addWidget(self.button_locklevel)
         self.btn2layout.addWidget(self.value_locklevel)
         self.btn2layout.addWidget(self.label_framerate)
@@ -117,6 +130,7 @@ class StartWindow(QMainWindow):
         self.btn2layout.addWidget(self.label_roi)
         self.btn2layout.addWidget(self.value_roi)
         self.btn2layout.addWidget(self.cbox_raw)
+        self.btn2layout.addWidget(self.label_avgval)
 
         self.img1layout.addWidget(self.image_view)
         self.img1layout.addWidget(self.roi_view)
@@ -136,8 +150,9 @@ class StartWindow(QMainWindow):
 
         # Functionality
         self.button_start.clicked.connect(self.update_image)
+        self.button_start.clicked.connect(self.change_start_col)
         self.button_reset.clicked.connect(self.reset_run)
-        self.button_update.clicked.connect(self.update_parameters)
+        self.button_reset.clicked.connect(self.update_parameters)
         self.button_locklevel.clicked.connect(self.locklevel)
         self.button_save.clicked.connect(self.save_parameters)
         self.slider_eslider.valueChanged.connect(self.update_exposure)
@@ -152,7 +167,14 @@ class StartWindow(QMainWindow):
         self.update_image()
         self.first_roi = self.getroiimage()
 
+    def change_reset_col(self):
+        self.button_reset.setStyleSheet("background-color:rgb(252,42,71)")
 
+    def change_start_col(self):
+        if self.button_start.isChecked():
+            self.button_start.setStyleSheet("default")
+        if self.button_start.isChecked() is False:
+            self.button_start.setStyleSheet("background-color:rgb(252,42,71)")
 
     def update_image(self):
         self.frame = self.camera.get_frame()
@@ -174,11 +196,11 @@ class StartWindow(QMainWindow):
             self.lock = True 
 
     def reset_run(self):
-        self.data=[]
-        self.avg_data=[]
-        # self.rplt.clear()
-        self.curve.clear()
-        self.curve2.clear()
+            self.update_parameters()
+            self.data=[]
+            self.avg_data=[]
+            self.curve.clear()
+            self.curve2.clear()
 
     def getroiimage(self):
         # r = [195, 148, 224, 216]
@@ -192,12 +214,14 @@ class StartWindow(QMainWindow):
         self.button_start.setChecked(False)
         self.camera.set_exposure(self.exp)
         self.label_eslider.setText("Exposure:  "+str(self.exp))
+        self.button_start.setStyleSheet("background-color:rgb(252,42,71)")
 
     def update_gain(self, value):
         self.gain = value
         self.button_start.setChecked(False)
         self.camera.set_gain(self.gain)
         self.label_gslider.setText("Gain:  "+str(self.gain))
+        self.button_start.setStyleSheet("background-color:rgb(252,42,71)")
 
     def moving_average(self):
         a = np.array(self.data)
@@ -219,12 +243,18 @@ class StartWindow(QMainWindow):
             self.curve.setData(np.hstack(self.data[-mlen:]))
         else:
             self.curve.clear()
+        if len(self.data) > 21:
+            self.avgval = np.average(self.data[-20:])
+            self.label_avgval.setText("AvgVal: " + str(format(int(self.avgval),"010d")))
+
 
     def update_parameters(self):
         if self.value_framerate.text().isdigit():
             self.framerate = int(self.value_framerate.text())
         if self.value_datalen.text().isdigit():
             self.datalen = int(self.value_datalen.text())
+            if(self.datalen < len(self.data)):
+                self.reset_run()
         if self.value_movingpt.text().isdigit():
             self.movingpt= int(self.value_movingpt.text())
         templevel = self.value_locklevel.text().split(sep=",")
@@ -236,6 +266,7 @@ class StartWindow(QMainWindow):
         if (len(temproi) == 4):
             self.roi = [int(float(i)) for i in temproi]
         del temproi
+        self.button_reset.setStyleSheet("default")
 
     # def save_parameters(self):
     #     tfile = open("./log.txt", "a+")
