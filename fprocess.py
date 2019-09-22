@@ -37,6 +37,7 @@ class StartWindow(QMainWindow):
         self.level = None
         self.lock = True
         self.avgval = 44
+        self.roi_flag = False
 
         # Camera
         self.camera = camera
@@ -168,6 +169,7 @@ class StartWindow(QMainWindow):
 
     def change_reset_col(self):
         self.button_reset.setStyleSheet("background-color:rgb(252,42,71)")
+        self.roi_flag = True
 
     def change_start_col(self):
         if self.button_start.isChecked():
@@ -195,11 +197,14 @@ class StartWindow(QMainWindow):
             self.lock = True 
 
     def reset_run(self):
+        if self.roi_flag == False:
             self.data=[]
             self.avg_data=[]
             self.curve.clear()
             self.curve2.clear()
+        if self.roi_flag == True:
             self.update_parameters()
+            self.roi_flag = False
 
     def getroiimage(self):
         # r = [195, 148, 224, 216]
