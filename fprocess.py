@@ -152,7 +152,6 @@ class StartWindow(QMainWindow):
         self.button_start.clicked.connect(self.update_image)
         self.button_start.clicked.connect(self.change_start_col)
         self.button_reset.clicked.connect(self.reset_run)
-        self.button_reset.clicked.connect(self.update_parameters)
         self.button_locklevel.clicked.connect(self.locklevel)
         self.button_save.clicked.connect(self.save_parameters)
         self.slider_eslider.valueChanged.connect(self.update_exposure)
@@ -196,11 +195,11 @@ class StartWindow(QMainWindow):
             self.lock = True 
 
     def reset_run(self):
-            self.update_parameters()
             self.data=[]
             self.avg_data=[]
             self.curve.clear()
             self.curve2.clear()
+            self.update_parameters()
 
     def getroiimage(self):
         # r = [195, 148, 224, 216]
@@ -266,6 +265,7 @@ class StartWindow(QMainWindow):
         if (len(temproi) == 4):
             self.roi = [int(float(i)) for i in temproi]
         del temproi
+        print("hitesh")
         self.button_reset.setStyleSheet("default")
 
     # def save_parameters(self):
