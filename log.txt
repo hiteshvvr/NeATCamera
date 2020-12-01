@@ -3,3 +3,7 @@ DateTime,					ROI,					Exposure,	Gain,	Intensity(Total),	Intensity(ROI),	Level,	
 2019-08-12 09:34:13.007000,	[195, 148, 224, 216],	50,			73,		612075,			90405,			(0, 11),	camimg1565591653.001.png
 DateTime,					ROI,					Exposure,	Gain,	Intensity(Total),	Intensity(ROI),	Level,	Imagefile,
 2020-11-30 08:29:22.509000,	[195, 148, 224, 216],	50,			50,		4298751,			616578,			(0, 46),	camimg1606717762.489.png
+DateTime,					ROI,					Exposure,	Gain,	Intensity(Total),	Intensity(ROI),	Level,	Imagefile,
+2020-11-30 15:31:13.110000,	[195, 148, 224, 216],	50,			50,		4273848,			609744,			(0, 60),	camimg1606743073.105.png
+DateTime,					ROI,					Exposure,	Gain,	Intensity(Total),	Intensity(ROI),	Level,	Imagefile,
+2020-11-30 16:04:01.499000,	[195, 148, 224, 216],	50,			50,		4292670,			608715,			(0, 61),	camimg1606745041.492.png

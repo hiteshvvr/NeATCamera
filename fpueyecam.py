@@ -18,8 +18,8 @@ class Camera:
         self.rectAOI = ueye.IS_RECT()
         self.pitch = ueye.INT()
         self.nBitsPerPixel = ueye.INT(24)  # 8 bit for monochrome 24 for color
-        self.channels = 3  # 3: for color mode(RGB); 1 channel for monochrome
-        self.m_nColorMode = ueye.INT(24)      # Y8/RGB16/RGB24/REG32
+        self.channels = 1  # 3: for color mode(RGB); 1 channel for monochrome
+        self.m_nColorMode = ueye.INT(8)      # Y8/RGB16/RGB24/REG32
         self.bytes_per_pixel = int(self.nBitsPerPixel / 8)
 
         self.ret = ueye.is_InitCamera(self.hcam, None)

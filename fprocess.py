@@ -14,6 +14,7 @@ import pyqtgraph.exporters
 from pyqtgraph.Qt import QtCore, QtGui
 import cv2
 from datetime import datetime
+from time import sleep
 
 
 class StartWindow(QMainWindow):
@@ -39,6 +40,11 @@ class StartWindow(QMainWindow):
         self.avgval = 44
         self.roi_flag = False
 
+        # temporaray 
+        self.counter = 1
+        self.fileout = open("data.txt", "a")
+
+
         # Camera
         self.camera = camera
 
@@ -46,8 +52,14 @@ class StartWindow(QMainWindow):
         self.button_start = QPushButton("Start/Stop")
         self.button_start.setStyleSheet("background-color:rgb(252,42,71)")
         self.button_start.setCheckable(True)
-        self.button_reset= QPushButton('Reset/Update')
-        self.button_save= QPushButton('SaveData')
+        self.button_reset = QPushButton('Reset/Update')
+        self.button_save = QPushButton('SaveData')
+        self.button_background = QPushButton('TakeBackground')
+
+        self.button_corrBgd = QPushButton('CorreckBGD')
+        self.button_corrBgd.setStyleSheet("background-color:rgb(252,42,71)")
+        self.button_corrBgd.setCheckable(True)
+
         # Second Horizontal row Widgets
         self.button_locklevel= QPushButton("LockLevel")
         self.button_locklevel.setCheckable(True)
@@ -120,6 +132,8 @@ class StartWindow(QMainWindow):
         self.btn1layout.addWidget(self.button_start)
         self.btn1layout.addWidget(self.button_reset)
         self.btn1layout.addWidget(self.button_save)
+        self.btn1layout.addWidget(self.button_background)
+        self.btn1layout.addWidget(self.button_corrBgd)
         self.btn2layout.addWidget(self.button_locklevel)
         self.btn2layout.addWidget(self.value_locklevel)
         self.btn2layout.addWidget(self.label_framerate)
@@ -153,6 +167,7 @@ class StartWindow(QMainWindow):
         self.button_start.clicked.connect(self.update_image)
         self.button_start.clicked.connect(self.change_start_col)
         self.button_reset.clicked.connect(self.reset_run)
+        self.button_background.clicked.connect(self.take_background)
         self.button_locklevel.clicked.connect(self.locklevel)
         self.button_save.clicked.connect(self.save_parameters)
         self.slider_eslider.valueChanged.connect(self.update_exposure)
@@ -166,6 +181,14 @@ class StartWindow(QMainWindow):
         self.first_frame = self.camera.get_frame()
         self.update_image()
         self.first_roi = self.getroiimage()
+        self.background = self.first_frame
+    
+    def take_background(self):
+        self.button_start.setChecked(False)
+        self.background = self.camera.get_frame()
+        cv2.imwrite("./background.png",self.frame[:,:,0])
+        sleep(0.1)
+        self.button_start.setChecked(True)
 
     def change_reset_col(self):
         self.button_reset.setStyleSheet("background-color:rgb(252,42,71)")
@@ -176,9 +199,34 @@ class StartWindow(QMainWindow):
             self.button_start.setStyleSheet("default")
         if self.button_start.isChecked() is False:
             self.button_start.setStyleSheet("background-color:rgb(252,42,71)")
+    
 
     def update_image(self):
         self.frame = self.camera.get_frame()
+        self.frame = self.frame.astype('int16')
+        if self.button_corrBgd.isChecked() is True:
+            if self.counter <= 10:
+                self.counter = self.counter +1  
+                # np.savetxt("frame.txt", self.frame)
+                # self.fileout.write(self.frame)
+                # self.fileout.write("background")
+                # self.fileout.write(self.background)
+                # self.fileout.write("subls")
+                print("\n---frame")
+                for i in range(10):
+                    print(self.frame[i][2][1], end=' ')
+                print("\nbackground")
+                for i in range(10):
+                    print(self.background[i][2][1], end=' ')
+                print("\ncorr")
+                self.frame = self.frame - self.background
+                self.frame = self.frame.clip(min = 0)
+                # self.fileout.write(self.frame)
+                self.fileout.close()
+                for i in range(10):
+                    print(self.frame[i][2][1], end=' ')
+                print(self.frame)
+            self.frame = self.frame - self.background
         self.roi_img = self.getroiimage()
         if(np.sum(self.roi_img)>100):
             self.roi_view.setImage(self.roi_img.T, autoLevels=self.lock, levels=self.level)
@@ -247,8 +295,8 @@ class StartWindow(QMainWindow):
             self.curve.setData(np.hstack(self.data[-mlen:]))
         else:
             self.curve.clear()
-        if len(self.data) > 21:
-            self.avgval = np.average(self.data[-20:])
+        # if len(self.data) > 21:
+            # self.avgval = np.average(self.data[-20:])
             self.label_avgval.setText("AvgVal: " + str(format(int(self.avgval),"010d")))
 
 
