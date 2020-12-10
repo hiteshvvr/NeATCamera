@@ -53,11 +53,11 @@ class StartWindow(QMainWindow):
         self.button_start.setStyleSheet("background-color:rgb(252,42,71)")
         self.button_start.setCheckable(True)
         self.button_reset = QPushButton('Reset/Update')
+        # self.button_reset.setMaximumWidth(50)
         self.button_save = QPushButton('SaveData')
         self.button_background = QPushButton('TakeBackground')
 
         self.button_corrBgd = QPushButton('CorreckBGD')
-        self.button_corrBgd.setStyleSheet("background-color:rgb(252,42,71)")
         self.button_corrBgd.setCheckable(True)
 
         # Second Horizontal row Widgets
@@ -168,6 +168,8 @@ class StartWindow(QMainWindow):
         self.button_start.clicked.connect(self.change_start_col)
         self.button_reset.clicked.connect(self.reset_run)
         self.button_background.clicked.connect(self.take_background)
+        self.button_corrBgd.clicked.connect(self.change_bgdcorr_col)
+
         self.button_locklevel.clicked.connect(self.locklevel)
         self.button_save.clicked.connect(self.save_parameters)
         self.slider_eslider.valueChanged.connect(self.update_exposure)
@@ -188,6 +190,7 @@ class StartWindow(QMainWindow):
         self.background = self.camera.get_frame()
         cv2.imwrite("./background.png",self.frame[:,:,0])
         sleep(0.1)
+        self.background = self.background.astype('int16')
         self.button_start.setChecked(True)
 
     def change_reset_col(self):
@@ -200,6 +203,11 @@ class StartWindow(QMainWindow):
         if self.button_start.isChecked() is False:
             self.button_start.setStyleSheet("background-color:rgb(252,42,71)")
     
+    def change_bgdcorr_col(self):
+        if self.button_corrBgd.isChecked():
+            self.button_corrBgd.setStyleSheet("background-color:rgb(22,242,71)")
+        if self.button_corrBgd.isChecked() is False:
+            self.button_corrBgd.setStyleSheet("default")
 
     def update_image(self):
         self.frame = self.camera.get_frame()
@@ -227,6 +235,7 @@ class StartWindow(QMainWindow):
                     print(self.frame[i][2][1], end=' ')
                 print(self.frame)
             self.frame = self.frame - self.background
+            self.frame = self.frame.clip(min = 0)
         self.roi_img = self.getroiimage()
         if(np.sum(self.roi_img)>100):
             self.roi_view.setImage(self.roi_img.T, autoLevels=self.lock, levels=self.level)
