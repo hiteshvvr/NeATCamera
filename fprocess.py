@@ -105,6 +105,14 @@ class StartWindow(QMainWindow):
         # Image View Widgets
         self.image_view = ImageView(self.aimwig)
         self.roi_view = ImageView()
+
+        self.roi_view.ui.histogram.hide()
+        self.roi_view.ui.roiBtn.hide()
+        self.roi_view.ui.menuBtn.hide()
+        self.image_view.ui.histogram.hide()
+        self.image_view.ui.roiBtn.hide()
+        self.image_view.ui.menuBtn.hide()
+
         # self.roi = pg.CircleROI([80, 50], [20, 20], pen=(4,9))
         # self.image_view.addItem(self.roi)
         # Intensity Graph Widget
@@ -220,13 +228,13 @@ class StartWindow(QMainWindow):
                 # self.fileout.write("background")
                 # self.fileout.write(self.background)
                 # self.fileout.write("subls")
-                print("\n---frame")
-                for i in range(10):
-                    print(self.frame[i][2][1], end=' ')
-                print("\nbackground")
-                for i in range(10):
-                    print(self.background[i][2][1], end=' ')
-                print("\ncorr")
+                # print("\n---frame")
+                # for i in range(10):
+                #     print(self.frame[i][2][1], end=' ')
+                # print("\nbackground")
+                # for i in range(10):
+                #     print(self.background[i][2][1], end=' ')
+                # print("\ncorr")
                 self.frame = self.frame - self.background
                 self.frame = self.frame.clip(min = 0)
                 # self.fileout.write(self.frame)
@@ -235,11 +243,14 @@ class StartWindow(QMainWindow):
                     print(self.frame[i][2][1], end=' ')
                 print(self.frame)
             self.frame = self.frame - self.background
+            # self.frame = self.frame - np.mean(self.background)
             self.frame = self.frame.clip(min = 0)
         self.roi_img = self.getroiimage()
         if(np.sum(self.roi_img)>100):
             self.roi_view.setImage(self.roi_img.T, autoLevels=self.lock, levels=self.level)
             self.image_view.setImage(self.frame.T, autoLevels=self.lock, levels=self.level)
+
+
         if self.button_start.isChecked():
             self.update_timer.start(self.framerate)
         if self.button_start.isChecked() is False:
@@ -304,8 +315,8 @@ class StartWindow(QMainWindow):
             self.curve.setData(np.hstack(self.data[-mlen:]))
         else:
             self.curve.clear()
-        # if len(self.data) > 21:
-            # self.avgval = np.average(self.data[-20:])
+        if len(self.data) > 21:
+            self.avgval = np.average(self.data[-20:])
             self.label_avgval.setText("AvgVal: " + str(format(int(self.avgval),"010d")))
 
 
@@ -363,8 +374,10 @@ class StartWindow(QMainWindow):
 
         timestamp = datetime.timestamp(datetime.now()) 
         filename = "camimg" + str(timestamp) + ".png"
+        filename_txt = "camimg" + str(timestamp) + ".txt"
         tfile.write("\n")
         cv2.imwrite(filename,self.frame[:,:,0])
+        np.savetxt(filename_txt,self.frame[:,:,0],fmt='%5d',delimiter=',')
 
         tfile.write("DateTime,\t\t\t\t\tROI,\t\t\t\t\tExposure,\tGain,\tIntensity(Total),\tIntensity(ROI),\tLevel,\tImagefile,\n")
         tfile.write(str(datetime.now()) + ",\t" + str(self.roi) + ",\t" + str(self.exp) + ",\t\t\t" + str(self.gain) + ",\t\t" + str(np.sum(self.frame)) + ",\t\t\t" + str(np.sum(self.roi_img)) +",\t\t\t" + str(self.image_view.quickMinMax(self.frame)) + ",\t" + str(filename))
