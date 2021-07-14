@@ -31,6 +31,10 @@ class StartWindow(QMainWindow):
         # parameters
         self.framerate = 50
         self.roi = [195, 148, 224, 216]
+        self.proi = pg.CircleROI([self.roi[2]/4, self.roi[3]/4], [1, 1],movable = False, resizable=False, pen=(4,9))
+        self.croi = pg.CircleROI([self.roi[2]/4, self.roi[3]/4], [1, 1],movable = False, resizable=False, pen=(4,9))
+        self.l1roi = pg.LineROI([self.roi[2]/4, self.roi[3]/4], [100, 100],width=5,movable = False, resizable=False, pen=(4,9))
+        self.l2roi = pg.LineROI([self.roi[2]/4, self.roi[3]/4], [100, 100],width=5,movable = False, resizable=False, pen=(4,9))
         self.datalen = 150
         self.movingpt = 50
         self.exp = 50
@@ -113,7 +117,7 @@ class StartWindow(QMainWindow):
         self.image_view.ui.roiBtn.hide()
         self.image_view.ui.menuBtn.hide()
 
-        # self.roi = pg.CircleROI([80, 50], [20, 20], pen=(4,9))
+        
         # self.image_view.addItem(self.roi)
         # Intensity Graph Widget
         self.gwin = pg.GraphicsWindow()
@@ -319,6 +323,32 @@ class StartWindow(QMainWindow):
             self.avgval = np.average(self.data[-20:])
             self.label_avgval.setText("AvgVal: " + str(format(int(self.avgval),"010d")))
 
+    def addremoverois(self):
+
+        self.roi_view.addItem(self.proi)
+        self.roi_view.addItem(self.croi)
+        self.roi_view.addItem(self.l1roi)
+        self.roi_view.addItem(self.l2roi)
+
+        if self.proi:
+            self.roi_view.removeItem(self.proi)
+        if self.croi:
+            self.roi_view.removeItem(self.croi)
+        if self.l1roi:
+            self.roi_view.removeItem(self.l1roi)
+        if self.l2roi:
+            self.roi_view.removeItem(self.l2roi)
+        
+        self.proi = pg.CircleROI([self.roi[2]/4, self.roi[3]/4], [1, 1],movable = False, resizable=False, pen=(4,9))
+        self.croi = pg.CircleROI([self.roi[2]/4, self.roi[3]/4], [self.roi[2]/2,self.roi[3]/2],movable = False, resizable=False, pen=(4,9))
+        self.l1roi = pg.LineROI([0, 0], [100, 100],width=1, movable = False, resizable=False, pen=(4,9))
+        self.l2roi = pg.LineROI([self.roi[2]/4, self.roi[3]/4], [100, 100],width=1, movable = False, resizable=False, pen=(4,9))
+
+        self.roi_view.addItem(self.proi)
+        # self.roi_view.addItem(self.croi)
+        self.roi_view.addItem(self.l1roi)
+        # self.roi_view.addItem(self.l2roi)
+
 
     def update_parameters(self):
         if self.value_framerate.text().isdigit():
@@ -338,8 +368,10 @@ class StartWindow(QMainWindow):
         if (len(temproi) == 4):
             self.roi = [int(float(i)) for i in temproi]
         del temproi
-        print("hitesh")
+        # print("hitesh")
         self.button_reset.setStyleSheet("default")
+        self.addremoverois()
+
 
     # def save_parameters(self):
     #     tfile = open("./log.txt", "a+")
