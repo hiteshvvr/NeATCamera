@@ -46,7 +46,7 @@ def show_webcam(mirror: bool = False) -> None:
 
 def main() -> None:
     """Main entry point of the script."""
-    show_webcam(mirror=False)
+    show_webcam(mirror=True)
 
 
 if __name__ == "__main__":
