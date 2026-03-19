@@ -26,7 +26,8 @@ def main() -> None:
 
     # Run event loop
     exit_code = app.exec()
-    camera.close_camera()
+    # camera.stopacquire()  # Stop any ongoing acquisition
+    camera.release()  # Ensure camera is released on exit
     sys.exit(exit_code)
 
 
