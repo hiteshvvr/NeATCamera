@@ -203,11 +203,7 @@ class StartWindow(QMainWindow):
         # self.image_view.setImage( self.frame.T, autoLevels=self.lock, levels=self.level)
         # Display ROI and full frame if valid
         if self.roi_img is not None and np.sum(self.roi_img) > 100:
-            self.roi_view.setImage(
-                self.roi_img.T,
-                autoLevels=self.lock,
-                levels=self.level
-            )
+            self.roi_view.setImage( self.roi_img.T, autoLevels=self.lock, levels=self.level)
             self.image_view.setImage( self.frame.T, autoLevels=self.lock, levels=self.level)
 
         # Control timer based on button state
@@ -216,16 +212,48 @@ class StartWindow(QMainWindow):
         else:
             self.update_timer.stop()
 
+    def save_parameters(self) -> None:
+        """
+        Save current camera parameters, ROI statistics, and image snapshot to log file.
+        """
+        if self.frame is None or self.roi_img is None:
+            print("No frame or ROI available to save.")
+            return
 
-    def reset_run(self):
-        pass
+        # Generate timestamp and filename
+        timestamp = datetime.now()
+        ts_str = timestamp.strftime("%Y-%m-%d_%H-%M-%S")
+        filename = f"camimg_{ts_str}.png"
 
-    def locklevel(self):
-        pass
+        # Save image (grayscale channel)
+        cv2.imwrite(filename, self.frame[:, :, 0])
 
-    def save_parameters(self):
-        pass
-    
+        # Prepare log entry
+        log_entry = (
+            f"{timestamp},\t"
+            f"ROI={self.roi},\t"
+            f"Exposure={self.exp},\t"
+            f"Gain={self.gain},\t"
+            f"Intensity(Total)={np.sum(self.frame)},\t"
+            f"Intensity(ROI)={np.sum(self.roi_img)},\t"
+            f"Level={self.image_view.quickMinMax(self.frame)},\t"
+            f"ImageFile={filename}\n"
+        )
+
+        # Append to log file safely
+        try:
+            with open("log.txt", "a", encoding="utf-8") as tfile:
+                # Optional: write header only if file is empty
+                if tfile.tell() == 0:
+                    header = (
+                        "DateTime,\tROI,\tExposure,\tGain,\t"
+                        "Intensity(Total),\tIntensity(ROI),\tLevel,\tImageFile\n"
+                    )
+                    tfile.write(header)
+                tfile.write(log_entry)
+        except Exception as e:
+            print(f"Error saving parameters: {e}")
+
     def moving_average(self) -> np.ndarray:
         """
         Compute moving average of collected data.
@@ -239,8 +267,7 @@ class StartWindow(QMainWindow):
         tsum = np.cumsum(a)
         tsum[self.movingpt:] = tsum[self.movingpt:] - tsum[:-self.movingpt]
         return tsum[self.movingpt - 1:] / self.movingpt
-    
-    
+
     def update_plot(self) -> None:
         """
         Update the intensity plot with raw and averaged data.
@@ -248,24 +275,23 @@ class StartWindow(QMainWindow):
         mlen = self.datalen
         if self.roi_img is not None:
             self.data.append(np.sum(self.roi_img))
-    
+
         if len(self.data) > self.datalen:
             self.data.pop(0)
-    
+
         if len(self.data) > self.movingpt + 5:
             mdata = self.moving_average()
             mlen = len(mdata)
             self.curve2.setData(mdata)
-    
+
         if self.cbox_raw.isChecked():
             self.curve.setData(np.hstack(self.data[-mlen:]))
         else:
             self.curve.clear()
-    
+
         if len(self.data) > 21:
             self.avgval = np.average(self.data[-20:])
             self.label_avgval.setText(f"AvgVal: {int(self.avgval):010d}")
-        
 
     def update_parameters(self):
         """Update parameters from the text fields when they change."""
@@ -291,9 +317,17 @@ class StartWindow(QMainWindow):
         except Exception:
             pass
 
-        try:
-            self.level = int(self.value_locklevel.text())
+        # try:
+        #     self.level = int(self.value_locklevel.text())
+        # except ValueError:
+        #     self.level = None
+        try: 
+            templevel = self.value_locklevel.text().split(sep=",")
+            if (len(templevel) == 2):
+                self.level= tuple([int(float(i.strip())) for i in templevel])
+                print(self.level)
         except ValueError:
+            print("Invalid level input, resetting to None.")
             self.level = None
 
     def change_reset_col(self) -> None:
@@ -302,7 +336,7 @@ class StartWindow(QMainWindow):
         """
         self.button_reset.setStyleSheet("background-color:rgb(252,42,71)")
         self.roi_flag = True
-    
+
     def change_start_col(self) -> None:
         """
         Update the Start button color depending on its checked state.
@@ -319,11 +353,12 @@ class StartWindow(QMainWindow):
         if self.button_locklevel.isChecked():
             if self.frame is not None:
                 self.level = self.image_view.quickMinMax(self.frame)
+                print(f"Levels locked at: {self.level}")
             self.lock = False
-        else:
+        if self.button_locklevel.isChecked() is False:
             self.level = None
             self.lock = True
-   
+
     def reset_run(self) -> None:
         """
         Reset or update the run depending on ROI flag.
@@ -336,7 +371,7 @@ class StartWindow(QMainWindow):
         else:
             self.update_parameters()
             self.roi_flag = False 
-    
+
     def update_exposure(self, value: int) -> None:
         """
         Update camera exposure and refresh UI.
@@ -347,7 +382,6 @@ class StartWindow(QMainWindow):
             self.camera.set_exposure(self.exp)
         self.label_eslider.setText(f"Exposure: {self.exp}")
         self.button_start.setStyleSheet("background-color:rgb(252,42,71)")
-
 
     def update_gain(self, value: int) -> None:
         """
