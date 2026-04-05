@@ -1,3 +1,9 @@
+Useful for
+“magneto optical trap imaging”
+“cold atom imaging”
+“fluorescence imaging OpenCV”
+“scientific camera monitoring”
+
 # NeatCamera
 This is the python program to manage IDS ueye camera, used in Magneto Optical 
 Trap. Idea is simple, take an image, cut the ROI, count the intensity and plot with time.
